@@ -1,0 +1,64 @@
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #F1F2E9;
+  }
+  
+
+  .container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #F1F2E9;
+  }
+  
+  /* Formulário */
+  .form-container {
+    background-color: #3a3a3a;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .title {
+    color: #fff;
+    font-size: 36px;
+    margin-bottom: 20px;
+    font-family: 'Georgia', serif;
+  }
+  
+  /* Campos de entrada */
+  .input-field {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 25px;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Botões */
+  .button {
+    width: 80%; 
+    height: 20%;
+    padding: 8px;
+    margin: 10px 0;
+    border-radius: 25px;
+    border: none;
+    background-color: #0066ff;
+    color: white;
+    font-size: 14px; 
+    cursor: pointer;
+  }
+  
+  .button:hover {
+    background-color: #004bb5;
+  }
+  
