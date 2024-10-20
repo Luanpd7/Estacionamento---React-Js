@@ -25,7 +25,12 @@
   }
   
   .modal-buttons {
+    gap: 1rem;
     display: flex;
     justify-content: space-around;
     margin-top: 20px;
+  }
+
+  .label-modal {
+    color: white;
   }
