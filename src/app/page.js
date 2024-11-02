@@ -1,12 +1,12 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
-import ModalEntrada from './components/modal/modalEntrada'; // Comprovante de entrada
-import ModalPrecos from './components/modal/modal'; // Modal de preços
+import ModalEntrada from './components/modal/modalEntrada';
+import ModalPrecos from './components/modal/modal';
 
 function App() {
-  const [showModalPrecos, setShowModalPrecos] = useState(false); // Controla o modal de preços
-  const [showModalEntrada, setShowModalEntrada] = useState(false); // Controla o modal de comprovante
+  const [showModalPrecos, setShowModalPrecos] = useState(false);
+  const [showModalEntrada, setShowModalEntrada] = useState(false);
   const [modalInfo, setModalInfo] = useState({
     nome: '',
     placa: '',
@@ -22,28 +22,45 @@ function App() {
     untilOneHour: '',
     afterOneHour: ''
   });
+  const [entries, setEntries] = useState([]);
 
-  // Abrir/Fechar modal de preços
-  const openModalPrecos = () => {
-    setShowModalPrecos(true);
-  };
+  useEffect(() => {
+    const fetchEntries = async () => {
+      try {
+        const response = await fetch('/api/estacionamento');
+        const data = await response.json();
+        setEntries(data);
+      } catch (error) {
+        console.error('Erro ao buscar entradas:', error);
+      }
+    };
+    fetchEntries();
+  }, []);
 
-  const closeModalPrecos = () => {
-    setShowModalPrecos(false);
-  };
+  const openModalPrecos = () => setShowModalPrecos(true);
+  const closeModalPrecos = () => setShowModalPrecos(false);
+  const openModalEntrada = () => setShowModalEntrada(true);
+  const closeModalEntrada = () => setShowModalEntrada(false);
 
-  // Abrir/Fechar modal de comprovante de entrada
-  const openModalEntrada = () => {
-    setShowModalEntrada(true);
-  };
-
-  const closeModalEntrada = () => {
-    setShowModalEntrada(false);
-  };
-
-  // Atualizar os preços
   const handleSavePrices = (untilOneHour, afterOneHour) => {
     setPrices({ untilOneHour, afterOneHour });
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`/api/estacionamento?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setEntries((prevEntries) => prevEntries.filter((entry) => entry.id !== id));
+      } else {
+        alert('Erro ao excluir a entrada');
+      }
+    } catch (error) {
+      console.error('Erro na solicitação de exclusão:', error);
+      alert('Erro ao excluir a entrada');
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -82,15 +99,16 @@ function App() {
           precoAteUmaHora: prices.untilOneHour,
           precoAposUmaHora: prices.afterOneHour,
         });
-        openModalEntrada(); // Exibir o comprovante de entrada
+        openModalEntrada();
 
-        // Limpar os campos após salvar
         setCustomerName('');
         setVehiclePlate('');
         setPrices({
           untilOneHour: '',
           afterOneHour: '',
         });
+
+        setEntries((prevEntries) => [...prevEntries, data]);
       } else {
         alert('Erro ao salvar os dados');
       }
@@ -100,7 +118,7 @@ function App() {
   };
 
   return (
-    <div className="container">
+    <div className="main-container">
       <div className="form-container">
         <h1 className="title">Park Car</h1>
         <form onSubmit={handleSubmit}>
@@ -126,20 +144,36 @@ function App() {
           </button>
         </form>
       </div>
-  
-      {/* Modal para definir os preços */}
+
       <ModalPrecos
         showModal={showModalPrecos}
         savePrices={handleSavePrices}
         closeModal={closeModalPrecos}
       />
 
-      {/* Modal para exibir as informações do cliente e estacionamento */}
       <ModalEntrada
         showModal={showModalEntrada}
         modalInfo={modalInfo}
         closeModal={closeModalEntrada}
       />
+
+      <div className="scroll-view">
+        {entries.map((entry) => (
+          <div key={entry.id} className="entry-item">
+            <div className="entry-details">
+              <span>Nome: {entry.nome}</span>
+              <span>Placa: {entry.placa}</span>
+              <span>Data: {entry.data}</span>
+              <span>Hora: {entry.hora}</span>
+            </div>
+            <div className="entry-actions">
+              <button className="icon-button green">✔</button>
+              <button className="icon-button edit">✏</button>
+              <button className="icon-button red" onClick={() => handleDelete(entry.id)}>🗑</button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
