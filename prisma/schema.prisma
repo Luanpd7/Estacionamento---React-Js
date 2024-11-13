@@ -7,19 +7,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Cliente {
-  id           Int           @id @default(autoincrement())
-  nome         String
-  placa        String
-  estacionamento Estacionamento[]
-
-  // Outras definições de campos
+model User {
+  id              Int       @id @default(autoincrement())
+  name            String
+  birthdate       DateTime
+  enrollmentDate  DateTime
+  email           String    @unique
+  cellphoneNumber BigInt    @unique
+  inPCD           Boolean   @default(false)
+  cep             Int
+  street          String    @default("")
+  addressNumber   Int       @default(0)
+  password        String
+  reserves        Reserve[] // Relacionamento com reservas do usuário
 }
 
-model Estacionamento {
-  id               Int      @id @default(autoincrement())
-  precoAteUmaHora  Float
-  precoAposUmaHora Float
-  clienteId        Int
-  cliente          Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+model Establishment {
+  id          Int       @id @default(autoincrement())
+  name        String
+  img         Bytes     // Para armazenar a imagem como bytea no PostgreSQL
+  description String?
+  vacancies   Vacancy[] // Relacionamento com vagas do estabelecimento
+}
+
+model Vacancy {
+  id              Int       @id @default(autoincrement())
+  number          String
+  occupied        Boolean   @default(false)
+  establishment   Establishment @relation(fields: [establishmentId], references: [id], onDelete: NoAction)
+  establishmentId Int
+  inPCD           Boolean   @default(false)
+  reserves        Reserve[]  // Relacionamento com reservas da vaga
+  statistics      Statistic[] // Relacionamento com estatísticas da vaga
+}
+
+model Reserve {
+  id           Int       @id @default(autoincrement())
+  startTime    DateTime
+  finishTime   DateTime
+  vacancy      Vacancy   @relation(fields: [vacancyId], references: [id], onDelete: NoAction)
+  vacancyId    Int
+  user         User      @relation(fields: [userId], references: [id], onDelete: NoAction)
+  userId       Int
+}
+
+model Statistic {
+  id           Int       @id @default(autoincrement())
+  startTime    DateTime
+  finishTime   DateTime?
+  vacancy      Vacancy   @relation(fields: [vacancyId], references: [id], onDelete: NoAction)
+  vacancyId    Int
 }
