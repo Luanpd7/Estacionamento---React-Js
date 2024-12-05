@@ -1,5 +1,5 @@
 
-import './modal.css'; // Crie o CSS separado para o modal ou mantenha no App.css
+import '../../css/modal.css'; // Crie o CSS separado para o modal ou mantenha no App.css
 import React, { useState } from 'react';
 
 // Função para formatar valores como dinheiro

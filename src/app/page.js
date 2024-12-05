@@ -1,181 +1,54 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import './App.css';
-import ModalEntrada from './components/modal/modalEntrada';
-import ModalPrecos from './components/modal/modal';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-function App() {
-  const [showModalPrecos, setShowModalPrecos] = useState(false);
-  const [showModalEntrada, setShowModalEntrada] = useState(false);
-  const [modalInfo, setModalInfo] = useState({
-    nome: '',
-    placa: '',
-    data: '',
-    hora: '',
-    precoAteUmaHora: '',
-    precoAposUmaHora: ''
-  });
+export default function HomePage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const router = useRouter();
 
-  const [customerName, setCustomerName] = useState('');
-  const [vehiclePlate, setVehiclePlate] = useState('');
-  const [prices, setPrices] = useState({
-    untilOneHour: '',
-    afterOneHour: ''
-  });
-  const [entries, setEntries] = useState([]);
+  const handleLogin = (e) => {
+    e.preventDefault();
 
-  useEffect(() => {
-    const fetchEntries = async () => {
-      try {
-        const response = await fetch('/api/estacionamento');
-        const data = await response.json();
-        setEntries(data);
-      } catch (error) {
-        console.error('Erro ao buscar entradas:', error);
-      }
-    };
-    fetchEntries();
-  }, []);
-
-  const openModalPrecos = () => setShowModalPrecos(true);
-  const closeModalPrecos = () => setShowModalPrecos(false);
-  const openModalEntrada = () => setShowModalEntrada(true);
-  const closeModalEntrada = () => setShowModalEntrada(false);
-
-  const handleSavePrices = (untilOneHour, afterOneHour) => {
-    setPrices({ untilOneHour, afterOneHour });
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      const response = await fetch(`/api/estacionamento?id=${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setEntries((prevEntries) => prevEntries.filter((entry) => entry.id !== id));
-      } else {
-        alert('Erro ao excluir a entrada');
-      }
-    } catch (error) {
-      console.error('Erro na solicitação de exclusão:', error);
-      alert('Erro ao excluir a entrada');
-    }
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!customerName || !vehiclePlate || !prices.untilOneHour || !prices.afterOneHour) {
-      alert('Preencha todos os campos antes de salvar.');
-      return;
-    }
-
-    const currentDate = new Date();
-    const formattedDate = currentDate.toLocaleDateString('pt-BR');
-    const formattedTime = currentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-    try {
-      const response = await fetch('/api/estacionamento', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nome: customerName,
-          placa: vehiclePlate,
-          precoAteUmaHora: prices.untilOneHour.replace(',', '.'),
-          precoAposUmaHora: prices.afterOneHour.replace(',', '.'),
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setModalInfo({
-          nome: customerName,
-          placa: vehiclePlate,
-          data: formattedDate,
-          hora: formattedTime,
-          precoAteUmaHora: prices.untilOneHour,
-          precoAposUmaHora: prices.afterOneHour,
-        });
-        openModalEntrada();
-
-        setCustomerName('');
-        setVehiclePlate('');
-        setPrices({
-          untilOneHour: '',
-          afterOneHour: '',
-        });
-
-        setEntries((prevEntries) => [...prevEntries, data]);
-      } else {
-        alert('Erro ao salvar os dados');
-      }
-    } catch (error) {
-      alert('Erro na solicitação: ' + error.message);
+    if (username === "admin" && password === "1234") {
+      localStorage.setItem("user", JSON.stringify({ username }));
+      router.push("/dashboard"); // Redireciona para o dashboard após login
+    } else {
+      setErrorMessage("Credenciais inválidas. Tente novamente.");
     }
   };
 
   return (
-    <div className="main-container">
-      <div className="form-container">
-        <h1 className="title">Park Car</h1>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            placeholder="Nome completo"
-            className="input-field"
-          />
-          <input
-            type="text"
-            value={vehiclePlate}
-            onChange={(e) => setVehiclePlate(e.target.value)}
-            placeholder="Placa do veículo"
-            className="input-field"
-          />
-          <button type="button" className="button" onClick={openModalPrecos}>
-            Preços
-          </button>
-          <button type="submit" className="button">
-            Salvar
-          </button>
-        </form>
-      </div>
-
-      <ModalPrecos
-        showModal={showModalPrecos}
-        savePrices={handleSavePrices}
-        closeModal={closeModalPrecos}
-      />
-
-      <ModalEntrada
-        showModal={showModalEntrada}
-        modalInfo={modalInfo}
-        closeModal={closeModalEntrada}
-      />
-
-      <div className="scroll-view">
-        {entries.map((entry) => (
-          <div key={entry.id} className="entry-item">
-            <div className="entry-details">
-              <span>Nome: {entry.nome}</span>
-              <span>Placa: {entry.placa}</span>
-              <span>Data: {entry.data}</span>
-              <span>Hora: {entry.hora}</span>
-            </div>
-            <div className="entry-actions">
-              <button className="icon-button green">✔</button>
-              <button className="icon-button edit">✏</button>
-              <button className="icon-button red" onClick={() => handleDelete(entry.id)}>🗑</button>
-            </div>
-          </div>
-        ))}
-      </div>
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "#f4f4f4" }}>
+      <form onSubmit={handleLogin} style={{ background: "#fff", padding: "2rem", borderRadius: "8px", boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", textAlign: "center", width: "100%", maxWidth: "300px" }}>
+        <h2>Login</h2>
+        <input
+          type="text"
+          placeholder="Usuário"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          style={{ display: "block", margin: "1rem 0", padding: "0.5rem", width: "100%", border: "1px solid #ccc", borderRadius: "4px" }}
+        />
+        <input
+          type="password"
+          placeholder="Senha"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          style={{ display: "block", margin: "1rem 0", padding: "0.5rem", width: "100%", border: "1px solid #ccc", borderRadius: "4px" }}
+        />
+        <button
+          type="submit"
+          style={{ padding: "0.5rem 1rem", backgroundColor: "#3498db", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+        >
+          Entrar
+        </button>
+        {errorMessage && <p style={{ color: "red", marginTop: "1rem" }}>{errorMessage}</p>}
+      </form>
     </div>
   );
 }
 
-export default App;
+

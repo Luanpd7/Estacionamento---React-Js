@@ -8,18 +8,19 @@ datasource db {
 }
 
 model Cliente {
-  id           Int           @id @default(autoincrement())
-  nome         String
-  placa        String
-  estacionamento Estacionamento[]
-
-  // Outras definições de campos
+  id            Int             @id @default(autoincrement())
+  nome          String
+  placa         String
+  estacionamento Estacionamento?
 }
 
 model Estacionamento {
   id               Int      @id @default(autoincrement())
   precoAteUmaHora  Float
   precoAposUmaHora Float
-  clienteId        Int
-  cliente          Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  horaEntrada      DateTime @default(now()) // Adiciona a hora de entrada
+  clienteId        Int      @unique
+  cliente          Cliente  @relation(fields: [clienteId], references: [id])
 }
+
+

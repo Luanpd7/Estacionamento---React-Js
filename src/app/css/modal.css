@@ -1,4 +1,4 @@
-/* Estilos do Modal */
+
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -33,4 +33,13 @@
 
   .label-modal {
     color: white;
+  }
+
+  p{
+    color: white;
+  }
+
+  label{
+    color: white;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
   }
