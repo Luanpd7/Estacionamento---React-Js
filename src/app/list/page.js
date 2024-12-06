@@ -1,21 +1,20 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import "../css/App.css"; // Certifique-se de ajustar o caminho correto para o CSS
-import ModalEntrada from "../components/modal/modalEntrada"; // Ajuste o caminho se necessário
+import "../css/App.css";
+import ModalEntrada from "../components/modal/modalEntrada";;
+import PaymentModal from "../components/PaymentModal";
 
 export default function ConsultaPage() {
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [modalInfo, setModalInfo] = useState(null);
   const [showModalEntrada, setShowModalEntrada] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editEntry, setEditEntry] = useState(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [qrCodeData, setQrCodeData] = useState("");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  const [valorTotal, setValorTotal] = useState(0);
 
-  // Fetch dos dados
   useEffect(() => {
     const fetchEntries = async () => {
       try {
@@ -33,27 +32,41 @@ export default function ConsultaPage() {
     fetchEntries();
   }, []);
 
-  // Ações de Detalhes
+  // Abrir Modal de Detalhes
   const openModalEntrada = (entry) => {
     setModalInfo(entry);
     setShowModalEntrada(true);
   };
 
-  const closeModalEntrada = () => {
-    setShowModalEntrada(false);
-    setModalInfo(null);
+  const closeModalEntrada = () => setShowModalEntrada(false);
+
+  // Abrir Modal de Pagamento
+  const openPaymentModal = (entry) => {
+    setModalInfo(entry);
+    setShowPaymentModal(true);
+
+    const now = new Date();
+    const entryTime = new Date(entry.estacionamento.horaEntrada);
+    const timeDiff = Math.abs(now - entryTime) / (1000 * 60 * 60); // Em horas
+
+    const valorCalculado =
+      timeDiff <= 1
+        ? entry.estacionamento.precoAteUmaHora
+        : entry.estacionamento.precoAteUmaHora +
+          (timeDiff - 1) * entry.estacionamento.precoAposUmaHora;
+
+    setValorTotal(valorCalculado);
   };
 
-  // Ações de Edição
+  const closePaymentModal = () => setShowPaymentModal(false);
+
+  // Abrir Modal de Edição
   const openEditModal = (entry) => {
     setEditEntry(entry);
     setShowEditModal(true);
   };
 
-  const closeEditModal = () => {
-    setShowEditModal(false);
-    setEditEntry(null);
-  };
+  const closeEditModal = () => setShowEditModal(false);
 
   const handleEditSubmit = async () => {
     try {
@@ -88,7 +101,7 @@ export default function ConsultaPage() {
     }
   };
 
-  // Ações de Exclusão
+  // Exclusão
   const handleDelete = async (id) => {
     try {
       const response = await fetch(`/api/estacionamento?id=${id}`, {
@@ -108,24 +121,6 @@ export default function ConsultaPage() {
     }
   };
 
-  // Ações de Pagamento
-  const openPaymentModal = (entry) => {
-    setModalInfo(entry);
-    setShowPaymentModal(true);
-    setQrCodeData("");
-    setSelectedPaymentMethod("");
-  };
-
-  const closePaymentModal = () => {
-    setShowPaymentModal(false);
-  };
-
-  const generateQrCode = () => {
-    const paymentInfo = `Pagamento para ${modalInfo.nome} - Placa: ${modalInfo.placa}`;
-    setQrCodeData(paymentInfo);
-  };
-
-  // Loading enquanto os dados não estão carregados
   if (isLoading) {
     return (
       <div className="vh-100 d-flex justify-content-center align-items-center">
@@ -139,59 +134,53 @@ export default function ConsultaPage() {
   return (
     <div className="main-container">
       <h1 className="title">Consulta de Entradas</h1>
-
       <div className="scroll-view">
-        {entries.length > 0 ? (
-          entries.map((entry) => (
-            <div key={entry.id} className="entry-item">
-              <div className="entry-details">
-                <span>Nome: {entry.nome}</span>
-                <span>Placa: {entry.placa}</span>
-                <span>Hora de Entrada: {entry.estacionamento?.horaEntrada || "N/A"}</span>
-              </div>
-              <div className="entry-actions">
-                <button
-                  className="icon-button green"
-                  onClick={() => openModalEntrada(entry)}
-                >
-                  Detalhes
-                </button>
-                <button
-                  className="icon-button edit"
-                  onClick={() => openEditModal(entry)}
-                >
-                  ✏
-                </button>
-                <button
-                  className="icon-button red"
-                  onClick={() => handleDelete(entry.id)}
-                >
-                  🗑
-                </button>
-                <button
-                  className="icon-button payment"
-                  onClick={() => openPaymentModal(entry)}
-                >
-                  💳
-                </button>
-              </div>
+        {entries.map((entry) => (
+          <div key={entry.id} className="entry-item">
+            <div className="entry-details">
+              <span>Nome: {entry.nome}</span>
+              <span>Placa: {entry.placa}</span>
             </div>
-          ))
-        ) : (
-          <p>Nenhuma entrada encontrada.</p>
-        )}
+            <div className="entry-actions">
+              <button
+                className="icon-button green"
+                onClick={() => openModalEntrada(entry)}
+              >
+                Detalhes
+              </button>
+              <button
+                className="icon-button edit"
+                onClick={() => openEditModal(entry)}
+              >
+                ✏ Editar
+              </button>
+              <button
+                className="icon-button red"
+                onClick={() => handleDelete(entry.id)}
+              >
+                🗑 Excluir
+              </button>
+              <button
+                className="icon-button payment"
+                onClick={() => openPaymentModal(entry)}
+              >
+                💳 Dinheiro
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
-
-      {/* Modal de Detalhes */}
-      {showModalEntrada && modalInfo && (
-        <ModalEntrada
-          showModal={showModalEntrada}
-          modalInfo={modalInfo}
-          closeModal={closeModalEntrada}
-        />
-      )}
-
-      {/* Modal de Edição */}
+      <ModalEntrada
+        showModal={showModalEntrada}
+        modalInfo={modalInfo}
+        closeModal={closeModalEntrada}
+      />
+      <PaymentModal
+        show={showPaymentModal}
+        modalInfo={modalInfo}
+        valorTotal={valorTotal}
+        closeModal={closePaymentModal}
+      />
       {showEditModal && editEntry && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -227,48 +216,6 @@ export default function ConsultaPage() {
                 Cancelar
               </button>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Pagamento */}
-      {showPaymentModal && modalInfo && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>Opções de Pagamento</h2>
-            <p>
-              Nome: {modalInfo.nome} <br />
-              Placa: {modalInfo.placa}
-            </p>
-            <div className="payment-options">
-              <button
-                className="button"
-                onClick={() => setSelectedPaymentMethod("Dinheiro")}
-              >
-                Dinheiro
-              </button>
-              <button className="button" onClick={generateQrCode}>
-                Gerar QR Code
-              </button>
-            </div>
-            {selectedPaymentMethod && (
-              <p>
-                Método Selecionado: <strong>{selectedPaymentMethod}</strong>
-              </p>
-            )}
-            {qrCodeData && (
-              <div className="qr-code-container">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
-                    qrCodeData
-                  )}&size=150x150`}
-                  alt="QR Code"
-                />
-              </div>
-            )}
-            <button className="button" onClick={closePaymentModal}>
-              Fechar
-            </button>
           </div>
         </div>
       )}

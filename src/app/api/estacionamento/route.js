@@ -8,6 +8,7 @@ export async function GET(request) {
 
   try {
     if (id) {
+      // Consulta o cliente e inclui o relacionamento com a tabela Estacionamento
       const entry = await prisma.cliente.findUnique({
         where: { id: parseInt(id) },
         include: { estacionamento: true },
@@ -17,15 +18,23 @@ export async function GET(request) {
         return new Response(JSON.stringify({ error: 'Cliente não encontrado' }), { status: 404 });
       }
 
-      // Calcula o tempo decorrido e o valor acumulado
-      const now = new Date();
-      const entryTime = new Date(entry.estacionamento.createdAt);
-      const timeDiff = Math.abs(now - entryTime) / (1000 * 60 * 60); // Em horas
-      const valorAcumulado =
-        timeDiff <= 1
-          ? entry.estacionamento.precoAteUmaHora
-          : entry.estacionamento.precoAteUmaHora +
-            (timeDiff - 1) * entry.estacionamento.precoAposUmaHora;
+          // Calcula a receita diária
+          let receitaDiaria = 10;
+          entries.forEach((entry) => {
+            if (entry.estacionamento && entry.estacionamento.horaEntrada) {
+              const now = new Date();
+              const entryTime = new Date(entry.estacionamento.horaEntrada);
+              const timeDiff = Math.abs(now - entryTime) / (1000 * 60 * 60); // Em horas
+    
+              const valorAcumulado =
+                timeDiff <= 1
+                  ? entry.estacionamento.precoAteUmaHora
+                  : entry.estacionamento.precoAteUmaHora +
+                    (timeDiff - 1) * entry.estacionamento.precoAposUmaHora;
+    
+              receitaDiaria += valorAcumulado;
+            }
+          });
 
       return new Response(
         JSON.stringify({
@@ -35,6 +44,7 @@ export async function GET(request) {
         { status: 200 }
       );
     } else {
+      // Retorna todos os clientes e seus dados de estacionamento
       const entries = await prisma.cliente.findMany({
         include: { estacionamento: true },
       });
@@ -51,6 +61,7 @@ export async function POST(request) {
   const { nome, placa, precoAteUmaHora, precoAposUmaHora } = await request.json();
 
   try {
+    // Cria um cliente com dados de estacionamento associados
     const newEntry = await prisma.cliente.create({
       data: {
         nome,
@@ -75,6 +86,7 @@ export async function PUT(request) {
   const { id, nome, placa, precoAteUmaHora, precoAposUmaHora } = await request.json();
 
   try {
+    // Atualiza os dados do cliente e estacionamento
     const updatedEntry = await prisma.cliente.update({
       where: { id: parseInt(id) },
       data: {
@@ -108,6 +120,7 @@ export async function DELETE(request) {
   }
 
   try {
+    // Exclui os dados do estacionamento e do cliente
     await prisma.estacionamento.deleteMany({
       where: {
         clienteId: parseInt(id),
@@ -124,3 +137,4 @@ export async function DELETE(request) {
     return new Response(JSON.stringify({ error: 'Erro ao excluir entrada' }), { status: 500 });
   }
 }
+

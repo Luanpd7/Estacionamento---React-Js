@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
   const [totalEstacionamentos, setTotalEstacionamentos] = useState(0);
+  const [receitaDiaria, setReceitaDiaria] = useState(0);
   const router = useRouter(); // Certifique-se de importar o useRouter corretamente
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export default function Dashboard() {
 
         const data = await response.json();
         setTotalEstacionamentos(data.length);
+        setReceitaDiaria(data.receitaDiaria); 
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
       }
@@ -64,7 +66,9 @@ export default function Dashboard() {
           <div className="card shadow-sm h-100">
             <div className="card-body">
               <h5 className="card-title">Receita Diária</h5>
-              <p className="card-text display-4 text-danger">R$ 0,00</p>
+              <p className="card-text display-4 text-danger">
+              R$ {(receitaDiaria || 0).toFixed(2).replace(".", ",")}
+                </p>
             </div>
           </div>
         </div>
